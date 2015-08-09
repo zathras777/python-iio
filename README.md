@@ -32,6 +32,9 @@ This is mainly a proof of concept to see what data can be used and how to interp
 ## Framework
 The IIO framework works well for getting the values, but it's not always clear what the values mean or how they should be used. This probably shows my lack of experience with such low level sensors, but I haven't managed to find any decent resources to explain this either, so maybe it's a more general lack of help?
 
+### Links
+- http://wiki.analog.com/software/linux/docs/iio/iio
+
 ## Returned Values
 - in_incli_x|y|z appear to be radians giving the inclination of the screen, but where exactly the origins are is still not 100% clear for all axes.
 - the first 2 values from als aren't valid, so you need to read at least 3 before you have a usable value. Not sure if this can be fixed by better sensor support?
@@ -41,3 +44,4 @@ The IIO framework works well for getting the values, but it's not always clear w
 - add python 3 support
 - actually do something useful with the returned values.
 
+All corrections/updates/info/patches welcome :-)

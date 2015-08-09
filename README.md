@@ -29,7 +29,8 @@ A module to access linux IIO devices and their data.
 ## Why?
 This is mainly a proof of concept to see what data can be used and how to interpret it. Hopefuly it will prove useful to others.
 
-## The IIO framework works well for getting the values, but it's not always clear what the values mean or how they should be used. This probably shows my lack of experience with such low level sensors, but I haven't managed to find any decent resources to explain this either, so maybe it's a more general lack of help?
+## Framework
+The IIO framework works well for getting the values, but it's not always clear what the values mean or how they should be used. This probably shows my lack of experience with such low level sensors, but I haven't managed to find any decent resources to explain this either, so maybe it's a more general lack of help?
 
 ## Returned Values
 - in_incli_x|y|z appear to be radians giving the inclination of the screen, but where exactly the origins are is still not 100% clear for all axes.

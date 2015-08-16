@@ -1,6 +1,7 @@
 from os import path
 import re
 from struct import unpack, calcsize
+from math import sqrt
 
 from .base import IIOBase
 
@@ -42,7 +43,8 @@ class IIOChannel(IIOBase):
 
     def parse_data(self, data):
         """ Parse packed data read from /dev endpoint. Stored values will be available as
-            .value
+            .value.
+            NB If the type is a quaternion, normalized values are returned.
         :param data: Bytes from /dev
         :return: Number of bytes read.
         """
@@ -52,6 +54,12 @@ class IIOChannel(IIOBase):
             self.value = unpacked[0] * self.scale
         else:
             self.value = [x * self.scale for x in unpacked[:self.n_vals]]
+        if 'quaternion' in self.name and self.n_vals == 4:
+            dot = 0
+            for v in self.value:
+                dot += v * v
+            sq = sqrt(dot)
+            self.value = [v / sq for v in self.value]
         return self.storage_sz
 
     def enable(self):

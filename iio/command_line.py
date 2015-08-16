@@ -9,7 +9,7 @@ def main():
     parser = argparse.ArgumentParser(description='IIO Device Client')
     parser.add_argument('--show-devices', action='store_true',
                         help='Scan and report for devices')
-    parser.add_argument('--read-raw', type=int, nargs='?',  help='Read raw values for devices')
+    parser.add_argument('--read-raw', action='store_true',  help='Read raw values for devices')
     parser.add_argument('--read', type=int, help='Number of records to read')
     parser.add_argument('--enable', help='Enable a device/channel. Format is device:channel')
     parser.add_argument('--disable', help='Disable a device/channel. Format is device:channel')
@@ -30,16 +30,36 @@ def main():
         print(iios.status_string())
         sys.exit(0)
 
-    if args.read_raw is not None:
-        print("For every device I will\n  - enable all channels\n  - read {} values\n  - disable all channels\n".
-              format(args.read_raw))
+    if args.read_raw:
+        if args.sensor is None:
+            print("For every device I will\n  - enable all channels\n  - read {} values\n  - disable all channels\n".
+                  format(args.read_raw))
         print("NB. values are RAW and unscaled")
         for dev in iios.devices:
-            dev.enable_channels()
-            print(dev.name)
-            vals = [dev.read_raw() for x in range(args.read_raw)]
-            pprint(vals)
-            dev.disable_channels()
+            if args.sensor is None or args.sensor in dev.name:
+                dev.enable_channels()
+                print(dev.name)
+                vals = [dev.read_raw() for x in range(args.read_raw)]
+                pprint(vals)
+                dev.disable_channels()
+        sys.exit(0)
+
+    if args.read and args.sensor is None:
+        print("You need to supply a device name")
+        sys.exit(0)
+
+    if args.read:
+        the_dev = None
+        for dev in iios.devices:
+            if args.sensor in dev.name:
+                the_dev = dev
+        if the_dev is None:
+            print("No such device '{}'".format(args.sensor))
+            sys.exit(0)
+
+        data = the_dev.read_buffer(args.read)
+        pprint(data)
+
         sys.exit(0)
 
     if args.enable is not None:

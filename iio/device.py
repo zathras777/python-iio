@@ -1,3 +1,4 @@
+import os
 from os import path
 
 
@@ -153,30 +154,50 @@ class IIODevice(IIOBase):
         self.stop_buffer()
         return self.collector.data
 
-    def read_buffer(self):
+    def read_buffer(self, howmany=10):
+        """ Attempt to read a variable number of values from the buffer.
+            This attempts to enable the device channels, open the buffer, read some values
+            then close the buffer and disable the channels. An attempt is made to not change
+            the status of the channels/buffer before/after.
+        :param howmany: How many values should be read?
+        :return: List with between 0 and howmany values.
+        """
+        enabled = [c.enabled for c in self.channels]
+        if not self.is_enabled:
+            self.enable_channels()
+        buffer = self.buffering
+        if not self.buffering:
+            self.start_buffer()
+
         dev_name = path.join("/dev", self.sys_id)
         inp = os.open(dev_name, os.O_RDONLY)
 
-        for n in range(0, 10):
-            try:
-                data = os.read(inp, self.buffer_size)
-                n = 0
-                for el in sorted(self.channels, key=lambda x: x.index):
-                    n += el.parse_data(data[n:])
+        buffer_data = []
+        for n in range(0, howmany):
+            iter_data = {}
+            for nn in range(3):
+                try:
+                    data = os.read(inp, self.buffer_size)
+                    pos = 0
+                    for el in sorted(self.channels, key=lambda x: x.index):
+                        pos += el.parse_data(data[pos:])
+                        iter_data[el.name] = el.value
+                    break
+                except OSError:
+                    pass
+            if iter_data == {}:
                 break
-            except OSError:
-                pass
+            buffer_data.append(iter_data)
 
         os.close(inp)
 
-        rv = {}
-        for el in self.channels:
-            sc = self.scales.get(el.channel_type, 1.0000)
-            if el.n_vals == 1:
-                rv[el.name] = el.value * sc
-            else:
-                rv[el.name] = [v * sc for v in el.value]
-        return rv
+        if not buffer:
+            self.stop_buffer()
+        for c in range(len(self.channels)):
+            if not enabled[c]:
+                self.channels[c].disable()
+
+        return buffer_data
 
     def status(self):
         s = " {:<2d} {:15s} ".format(self.devnum, self.name)
